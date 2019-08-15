@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/vmihailenco/msgpack"
 	"io"
+	"shield/rpc/codec"
 )
 
 type MessageType byte
@@ -35,10 +36,10 @@ const (
 
 type Header struct {
 	Seq           uint64
-	MessageType   byte
-	CompressType  byte
-	SerializeType byte
-	StatusCode    byte
+	MessageType   MessageType
+	CompressType  CompressType
+	SerializeType codec.SerializeType
+	StatusCode    StatusCode
 	ServiceName   string
 	MethodName    string
 	Error         string
@@ -48,6 +49,14 @@ type Header struct {
 type Message struct {
 	*Header
 	Data []byte
+}
+
+func (m Message) Clone() *Message {
+	header := *m.Header
+	c := new(Message)
+	c.Header = &header
+	c.Data = m.Data
+	return c
 }
 
 type Protocol interface {
@@ -69,6 +78,10 @@ type RPCProtocol struct {
 
 func (RPCProtocol) NewMessage() *Message {
 	return &Message{Header: &Header{}}
+}
+
+func EncodeMessage(t ProtocolType, m *Message) []byte {
+	return protocols[t].EncodeMessage(m)
 }
 
 func (RPCProtocol) DecodeMessage(r io.Reader) (msg *Message, err error) {

@@ -86,3 +86,7 @@ func (s *ServerSocket) Accept() (Transport, error) {
 func (s *ServerSocket) Close() error {
 	return s.ln.Close()
 }
+
+func NewServerTransport(t TransportType) ServerTransport {
+	return makeServerTransport[t]()
+}
